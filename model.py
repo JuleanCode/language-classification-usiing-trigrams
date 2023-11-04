@@ -36,8 +36,13 @@ class LanguageIdentifier:
 
         for lang in self.languages:
             prob = 1.0
-            for trigram in trigrams:
-                prob *= (self.trigram_models[lang][trigram] + 1) / (self.total_trigrams[lang] + len(self.trigram_models[lang]))
+            for i in range(len(trigrams)):
+                trigram = trigrams[i]
+                if i >= 2:  # Start calculating the probability after the first two trigrams
+                    previous_trigram = trigrams[i-2:i]
+                    trigram_prob = (self.trigram_models[lang][trigram] + 1) / (self.total_trigrams[lang] + len(self.trigram_models[lang]))
+                    context_prob = (self.trigram_models[lang][previous_trigram[0]] + 1) / (self.total_trigrams[lang] + len(self.trigram_models[lang]))
+                    prob *= trigram_prob * context_prob
             probabilities[lang] = prob
 
         return probabilities
@@ -50,7 +55,8 @@ class LanguageIdentifier:
         print("The text is most likely in", max_lang)
         print("Language probabilities:")
         for lang in sorted_langs:
-            print(lang, ':', probabilities[lang])
+            percentage = (probabilities[lang] / sum(probabilities.values())) * 100
+            print(f"{lang}: {percentage:.2f}%")
 
         return max_lang, sorted_langs, probabilities
 
