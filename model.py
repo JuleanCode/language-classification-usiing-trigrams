@@ -1,6 +1,5 @@
 from collections import defaultdict
 import os
-import re
 
 class LanguageIdentifier:
     def __init__(self):
@@ -13,14 +12,13 @@ class LanguageIdentifier:
         for filename in os.listdir(data_path):
             if filename.endswith(".txt"):
                 language = filename.split('.')[0]  # Assuming file names are in the format "language.txt"
-                with open(os.path.join(data_path, filename), 'r', encoding='utf-8') as file:
+                with open(os.path.join(data_path, filename), 'r', encoding='latin-1') as file:
                     text = file.read()
                     self.languages.append(language)
                     self.training_data[language] = text
 
     def train(self):
         for lang, text in self.training_data.items():
-            text = re.sub(r'[^a-zA-Z\s]', '', text.lower())
             self.trigram_models[lang] = defaultdict(int)
             self.total_trigrams[lang] = 0
 
@@ -30,7 +28,6 @@ class LanguageIdentifier:
                 self.total_trigrams[lang] += 1
 
     def language_probability(self, sentence):
-        sentence = re.sub(r'[^a-zA-Z\s]', '', sentence.lower())
         trigrams = [sentence[i:i+3] for i in range(len(sentence) - 2)]
         probabilities = {lang: 0 for lang in self.languages}
 
@@ -38,7 +35,7 @@ class LanguageIdentifier:
             prob = 1.0
             for i in range(len(trigrams)):
                 trigram = trigrams[i]
-                if i >= 2:  # Start calculating the probability after the first two trigrams
+                if i >= 2:
                     previous_trigram = trigrams[i-2:i]
                     trigram_prob = (self.trigram_models[lang][trigram] + 1) / (self.total_trigrams[lang] + len(self.trigram_models[lang]))
                     context_prob = (self.trigram_models[lang][previous_trigram[0]] + 1) / (self.total_trigrams[lang] + len(self.trigram_models[lang]))
