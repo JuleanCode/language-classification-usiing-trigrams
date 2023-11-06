@@ -11,7 +11,7 @@ class LanguageIdentifier:
     def load_training_data(self, data_path):
         for filename in os.listdir(data_path):
             if filename.endswith(".txt"):
-                language = filename.split('.')[0]  # Assuming file names are in the format "language.txt"
+                language = filename.split('.')[0]
                 with open(os.path.join(data_path, filename), 'r', encoding='latin-1') as file:
                     text = file.read()
                     self.languages.append(language)
@@ -55,18 +55,38 @@ class LanguageIdentifier:
             percentage = (probabilities[lang] / sum(probabilities.values())) * 100
             print(f"{lang}: {percentage:.2f}%")
 
-        return max_lang, sorted_langs, probabilities
+        return max_lang
 
-# Example usage
+    def evaluate(self, test_data):
+        total_sentences = len(test_data)
+        correct_predictions = 0
+
+        for sentence, actual_language in test_data:
+            predicted_language = self.identify_language(sentence)
+            if predicted_language == actual_language:
+                correct_predictions += 1
+
+        accuracy = correct_predictions / total_sentences
+        return accuracy
+
 def main():
     language_identifier = LanguageIdentifier()
-    data_path = "data"  # Path to the folder containing training data
+    data_path = "data"
 
     language_identifier.load_training_data(data_path)
     language_identifier.train()
 
+    # Test data is in format [sentence] [language]
+    test_data = [
+        ("Hoe gaat het vandaag?", "nederlands"),
+        ("How are you doing today?", "engels")
+    ]
+
+    accuracy = language_identifier.evaluate(test_data)
+    print(f"Accuracy: {accuracy * 100:.2f}%")
+
     input_sentence = input("Enter a sentence: ")
-    result = language_identifier.identify_language(input_sentence)
+    language_identifier.identify_language(input_sentence)
 
 if __name__ == "__main__":
     main()
